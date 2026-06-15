@@ -248,7 +248,9 @@ function renderAssignmentCard(a, completedCount) {
     '<div class="text-3xl font-bold leading-none mb-1">' +
     completedCount +
     '</div>' +
-    '<div class="text-xs opacity-70 mb-3">команд сдали</div>' +
+    '<div class="text-xs opacity-70 mb-3">' +
+    teamsSubmittedPhrase(completedCount) +
+    '</div>' +
     '<div class="text-sm font-medium opacity-90 leading-snug">' +
     escapeHtml(title) +
     '</div>';
@@ -494,6 +496,13 @@ function pluralTeams(n) {
 
 function formatTeamsCountLabel(n) {
   return n + ' ' + pluralTeams(n);
+}
+
+function teamsSubmittedPhrase(n) {
+  const abs = n % 100;
+  const mod10 = abs % 10;
+  const verb = abs === 11 || mod10 !== 1 ? 'сдали' : 'сдала';
+  return pluralTeams(n) + ' ' + verb;
 }
 
 function updateProgress(statistics, assignmentCount) {
