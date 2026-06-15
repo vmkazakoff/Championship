@@ -160,6 +160,19 @@ function hideSplash() {
   }, 300);
 }
 
+function resolveAssetUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value) || value.startsWith('data:')) return value;
+
+  const pageBase = window.location.pathname.replace(/\/[^/]*$/, '/');
+  if (value.startsWith('/')) {
+    return window.location.origin + value;
+  }
+
+  return pageBase + value.replace(/^\.\//, '');
+}
+
 function applyPageMeta(config) {
   const title = config.title || 'Чемпионат по промптингу';
   document.title = title;
@@ -173,10 +186,10 @@ function applyPageMeta(config) {
   }
 
   if (config.faviconUrl) {
-    els.favicon.href = config.faviconUrl;
+    els.favicon.href = resolveAssetUrl(config.faviconUrl);
   }
   if (config.logoUrl) {
-    els.logo.src = config.logoUrl;
+    els.logo.src = resolveAssetUrl(config.logoUrl);
     els.logo.alt = '';
     if (config.logoHeight) els.logo.style.height = config.logoHeight;
     els.logoWrap.classList.remove('hidden');
