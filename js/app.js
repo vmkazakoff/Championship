@@ -135,7 +135,7 @@ async function loadData() {
     renderAssignments(data);
     applyTheme(data.config);
     updateProgress(data.statistics, data.assignments.length);
-    updateLeaderboard(data.teams, data.assignments);
+    updateLeaderboard(data.teams);
     updateTeamSubmissionStatus(data.teams);
     refreshAnswerModalIfOpen();
     updateRoleUI();
@@ -533,17 +533,7 @@ function updateProgress(statistics, assignmentCount) {
   els.totalAssignments.textContent = totalDone + ' из ' + maxPossible + ' заданий';
 }
 
-function updateLeaderboard(teams, assignments) {
-  const showScores = assignments.some(function (a) {
-    return a.showScores;
-  });
-
-  if (!showScores) {
-    els.leaderboard.innerHTML =
-      '<div class="text-center py-8" data-theme="muted-text"><p>Баллы объявят позже</p></div>';
-    return;
-  }
-
+function updateLeaderboard(teams) {
   if (!teams || teams.length === 0) {
     els.leaderboard.innerHTML =
       '<div class="text-center py-8" data-theme="muted-text"><p>Пока нет ни одной команды</p></div>';
@@ -664,30 +654,37 @@ function refreshAnswerModalIfOpen() {
   const assignment = (appState.bootstrap.assignments || []).find(function (a) {
     return String(a.id) === String(appState.currentAssignment);
   });
-  if (assignment) populateAnswerModal(assignment);
+  if (assignment) populateAnswerModal(assignment, { preserveDraft: true });
 }
 
-function populateAnswerModal(assignment) {
+function populateAnswerModal(assignment, options) {
+  const preserveDraft = options && options.preserveDraft;
   const id = String(assignment.id);
   const submitted = appState.submittedAnswers.has(id);
   const submission = getTeamSubmission(id);
 
   els.answerModalTitle.textContent = 'Задание ' + id;
   els.answerModalDescription.textContent = assignment.description;
-  hideAnswerResult();
 
   if (submitted && submission) {
-    els.answerText.value = submission.answer;
+    if (els.answerText.value !== submission.answer) {
+      els.answerText.value = submission.answer;
+    }
     els.answerText.disabled = true;
     els.answerWarning.classList.add('hidden');
     els.submitAnswerButton.textContent = 'Закрыть';
     showAnswerResult(submission.score, submission.feedback);
-  } else {
-    els.answerText.value = '';
-    els.answerText.disabled = false;
-    els.answerWarning.classList.remove('hidden');
-    els.submitAnswerButton.textContent = 'Отправить';
+    return;
   }
+
+  if (!preserveDraft) {
+    els.answerText.value = '';
+    hideAnswerResult();
+  }
+
+  els.answerText.disabled = false;
+  els.answerWarning.classList.remove('hidden');
+  els.submitAnswerButton.textContent = 'Отправить';
 }
 
 function updateRoleUI() {
