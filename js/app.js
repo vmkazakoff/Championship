@@ -35,9 +35,12 @@ const els = {
   cancelButton: document.getElementById('cancelButton'),
   teamNameInput: document.getElementById('teamNameInput'),
   teamNameField: document.getElementById('teamNameField'),
+  memberTeamInput: document.getElementById('memberTeamInput'),
+  memberTeamSelect: document.getElementById('memberTeamSelect'),
   answerModal: document.getElementById('answerModal'),
   answerModalTitle: document.getElementById('answerModalTitle'),
   answerModalDescription: document.getElementById('answerModalDescription'),
+  answerPromptLabel: document.getElementById('answerPromptLabel'),
   answerText: document.getElementById('answerText'),
   answerWarning: document.getElementById('answerWarning'),
   answerResultSection: document.getElementById('answerResultSection'),
@@ -115,11 +118,16 @@ function setupEventListeners() {
 }
 
 function restoreSession() {
-  const role = localStorage.getItem('userRole');
+  let role = localStorage.getItem('userRole');
   const teamName = localStorage.getItem('teamName');
+  if (role === 'observer' && teamName) {
+    role = 'member';
+    localStorage.setItem('userRole', 'member');
+  }
   if (role) {
     appState.userRole = role;
-    appState.teamName = teamName;
+    appState.teamName = role === 'observer' ? null : teamName;
+    if (role === 'observer') localStorage.removeItem('teamName');
     updateRoleUI();
   } else {
     showAuthModal();
@@ -132,6 +140,7 @@ async function loadData() {
     const data = await fetchBootstrap();
     appState.bootstrap = data;
     applyPageMeta(data.config);
+    syncMemberTeamSelect();
     renderAssignments(data);
     applyTheme(data.config);
     updateProgress(data.statistics, data.assignments.length);
@@ -233,20 +242,31 @@ function getTeamSubmission(assignmentId) {
   return appState.teamSubmissions[String(assignmentId)] || null;
 }
 
+function isCaptainRole() {
+  return appState.userRole === 'captain';
+}
+
+function isTeamMemberRole() {
+  return appState.userRole === 'member' && !!appState.teamName;
+}
+
 function renderAssignmentCard(a, completedCount) {
   const title = assignmentCardTitle(a.description, a.id);
   const submitted = appState.submittedAnswers.has(String(a.id));
   const submission = getTeamSubmission(a.id);
-  const isCaptain = appState.userRole === 'captain';
+  const isCaptain = isCaptainRole();
+  const memberCanView = isTeamMemberRole() && submitted;
   const config = appState.bootstrap && appState.bootstrap.config;
   const radius = getBorderRadiusClasses(config);
   const radiusOverflow = radius.all ? ' overflow-hidden' : '';
 
   let scoreRow = '';
-  if (isCaptain && submitted && submission && submission.score != null) {
+  if ((isCaptain || isTeamMemberRole()) && submitted && submission && submission.score != null) {
     scoreRow =
       '<div class="mt-4 pt-3 border-t border-white/25">' +
-      '<div class="text-xs uppercase tracking-wide opacity-70 mb-0.5">Ваш балл</div>' +
+      '<div class="text-xs uppercase tracking-wide opacity-70 mb-0.5">' +
+      (isCaptain ? 'Ваш балл' : 'Балл') +
+      '</div>' +
       '<div class="text-2xl font-bold leading-none">' +
       submission.score +
       '</div>' +
@@ -268,49 +288,72 @@ function renderAssignmentCard(a, completedCount) {
     escapeHtml(title) +
     '</div>';
 
-  const body = bodyCore + (isCaptain ? scoreRow : '') + '</div>';
+  const body = bodyCore + (isCaptain || isTeamMemberRole() ? scoreRow : '') + '</div>';
 
-  if (!isCaptain) {
+  if (isCaptain) {
+    const actionLabel = submitted ? 'ОТПРАВЛЕНО' : 'ОТПРАВИТЬ';
+
     return (
-      '<div class="assignment-card flex flex-col min-w-0' +
+      '<button type="button" class="assignment-btn assignment-card group min-w-0 text-left' +
       radiusOverflow +
       ' ' +
       radius.all +
-      '" data-assignment-id="' +
+      ' assignment-btn--active' +
+      (submitted ? ' assignment-btn--submitted opacity-60 hover:opacity-80' : '') +
+      ' cursor-pointer' +
+      '" data-assignment="' +
       a.id +
       '">' +
-      '<div data-theme="assignment-bg" class="text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[160px]">' +
+      '<div data-theme="assignment-bg" class="' +
+      radius.top +
+      ' text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[140px]">' +
       body +
       '</div>' +
-      '</div>'
+      '<div class="' +
+      radius.bottom +
+      ' w-full py-2.5 px-3 text-sm font-semibold text-center bg-gray-800 text-white transition-colors group-hover:bg-gray-700' +
+      '">' +
+      actionLabel +
+      '</div>' +
+      '</button>'
     );
   }
 
-  const actionLabel = submitted ? 'ОТПРАВЛЕНО' : 'ОТПРАВИТЬ';
+  if (memberCanView) {
+    return (
+      '<button type="button" class="assignment-btn assignment-card group min-w-0 text-left' +
+      radiusOverflow +
+      ' ' +
+      radius.all +
+      ' assignment-btn--active cursor-pointer' +
+      '" data-assignment="' +
+      a.id +
+      '">' +
+      '<div data-theme="assignment-bg" class="' +
+      radius.top +
+      ' text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[140px]">' +
+      body +
+      '</div>' +
+      '<div class="' +
+      radius.bottom +
+      ' w-full py-2.5 px-3 text-sm font-semibold text-center bg-gray-800 text-white transition-colors group-hover:bg-gray-700' +
+      '">СМОТРЕТЬ</div>' +
+      '</button>'
+    );
+  }
 
   return (
-    '<button type="button" class="assignment-btn assignment-card group min-w-0 text-left' +
+    '<div class="assignment-card flex flex-col min-w-0' +
     radiusOverflow +
     ' ' +
     radius.all +
-    ' assignment-btn--active' +
-    (submitted ? ' assignment-btn--submitted opacity-60 hover:opacity-80' : '') +
-    ' cursor-pointer' +
-    '" data-assignment="' +
+    '" data-assignment-id="' +
     a.id +
     '">' +
-    '<div data-theme="assignment-bg" class="' +
-    radius.top +
-    ' text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[140px]">' +
+    '<div data-theme="assignment-bg" class="text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[160px]">' +
     body +
     '</div>' +
-    '<div class="' +
-    radius.bottom +
-    ' w-full py-2.5 px-3 text-sm font-semibold text-center bg-gray-800 text-white transition-colors group-hover:bg-gray-700' +
-    '">' +
-    actionLabel +
-    '</div>' +
-    '</button>'
+    '</div>'
   );
 }
 
@@ -582,7 +625,8 @@ function updateTeamSubmissionStatus(teams) {
   appState.submittedAnswers.clear();
   appState.teamSubmissions = {};
 
-  if (appState.userRole !== 'captain' || !appState.teamName) return;
+  if (!appState.teamName) return;
+  if (!isCaptainRole() && !isTeamMemberRole()) return;
 
   const team = teams.find(function (t) {
     return String(t.teamName).trim().toLowerCase() === String(appState.teamName).trim().toLowerCase();
@@ -617,7 +661,7 @@ function formatScoreDisplay(score) {
 
 function showAnswerResult(score, feedback) {
   if (score == null) {
-    els.answerResultSection.classList.add('hidden');
+    hideAnswerResult();
     return;
   }
 
@@ -662,9 +706,21 @@ function populateAnswerModal(assignment, options) {
   const id = String(assignment.id);
   const submitted = appState.submittedAnswers.has(id);
   const submission = getTeamSubmission(id);
+  const captain = isCaptainRole();
 
   els.answerModalTitle.textContent = 'Задание ' + id;
   els.answerModalDescription.textContent = assignment.description;
+  if (els.answerPromptLabel) {
+    els.answerPromptLabel.textContent = captain ? 'Ваш промпт:' : 'Промпт команды:';
+  }
+
+  if (captain) {
+    els.submitAnswerButton.classList.remove('hidden');
+    els.cancelAnswerButton.textContent = 'Отмена';
+  } else {
+    els.submitAnswerButton.classList.add('hidden');
+    els.cancelAnswerButton.textContent = 'Закрыть';
+  }
 
   if (submitted && submission) {
     if (els.answerText.value !== submission.answer) {
@@ -672,8 +728,16 @@ function populateAnswerModal(assignment, options) {
     }
     els.answerText.disabled = true;
     els.answerWarning.classList.add('hidden');
-    els.submitAnswerButton.textContent = 'Закрыть';
+    if (captain) els.submitAnswerButton.textContent = 'Закрыть';
     showAnswerResult(submission.score, submission.feedback);
+    return;
+  }
+
+  if (!captain) {
+    els.answerText.value = '';
+    els.answerText.disabled = true;
+    els.answerWarning.classList.add('hidden');
+    hideAnswerResult();
     return;
   }
 
@@ -688,7 +752,7 @@ function populateAnswerModal(assignment, options) {
 }
 
 function updateRoleUI() {
-  if (appState.userRole === 'captain' && appState.teamName) {
+  if ((isCaptainRole() || isTeamMemberRole()) && appState.teamName) {
     els.teamNameLabel.textContent = '(команда: ' + appState.teamName + ')';
     els.teamNameLabel.classList.remove('hidden');
   } else {
@@ -700,9 +764,66 @@ function updateRoleUI() {
   }
 }
 
+function getKnownTeamNames() {
+  const teams = (appState.bootstrap && appState.bootstrap.teams) || [];
+  const names = [];
+  const seen = {};
+  teams.forEach(function (team) {
+    const name = String(team.teamName || '').trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (seen[key]) return;
+    seen[key] = true;
+    names.push(name);
+  });
+  names.sort(function (a, b) {
+    return a.localeCompare(b, 'ru');
+  });
+  return names;
+}
+
+function syncMemberTeamSelect() {
+  if (!els.memberTeamSelect) return;
+
+  const names = getKnownTeamNames();
+  const namesKey = names.join('\0');
+  const previous = els.memberTeamSelect.value;
+
+  if (els.memberTeamSelect.dataset.namesKey !== namesKey) {
+    let html = '<option value="" disabled>Выберите команду</option>';
+    names.forEach(function (name) {
+      html += '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>';
+    });
+    els.memberTeamSelect.innerHTML = html;
+    els.memberTeamSelect.dataset.namesKey = namesKey;
+
+    if (previous && names.indexOf(previous) !== -1) {
+      els.memberTeamSelect.value = previous;
+    } else if (appState.userRole === 'member' && appState.teamName && names.indexOf(appState.teamName) !== -1) {
+      els.memberTeamSelect.value = appState.teamName;
+    } else {
+      els.memberTeamSelect.value = '';
+    }
+  }
+
+  updateMemberTeamSelectVisibility();
+}
+
+function updateMemberTeamSelectVisibility() {
+  if (!els.memberTeamInput) return;
+  const selected = document.querySelector('input[name="role"]:checked');
+  const show = selected && selected.value === 'member';
+  if (show) {
+    els.memberTeamInput.classList.remove('hidden');
+  } else {
+    els.memberTeamInput.classList.add('hidden');
+  }
+}
+
 function showAuthModal() {
   els.authModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  syncMemberTeamSelect();
 }
 
 function hideAuthModal() {
@@ -711,10 +832,16 @@ function hideAuthModal() {
 }
 
 function handleRoleChange(e) {
-  if (e.target.value === 'captain') {
+  const role = e.target.value;
+  if (role === 'captain') {
     els.teamNameInput.classList.remove('hidden');
+    if (els.memberTeamInput) els.memberTeamInput.classList.add('hidden');
+  } else if (role === 'member') {
+    els.teamNameInput.classList.add('hidden');
+    updateMemberTeamSelectVisibility();
   } else {
     els.teamNameInput.classList.add('hidden');
+    if (els.memberTeamInput) els.memberTeamInput.classList.add('hidden');
   }
 }
 
@@ -754,6 +881,14 @@ async function handleLogin() {
       els.loginButton.textContent = 'Войти';
       return;
     }
+  } else if (role === 'member') {
+    teamName = els.memberTeamSelect ? els.memberTeamSelect.value.trim() : '';
+    if (!teamName) {
+      alert(getKnownTeamNames().length ? 'Пожалуйста, выберите команду' : 'Пока нет зарегистрированных команд');
+      els.loginButton.disabled = false;
+      els.loginButton.textContent = 'Войти';
+      return;
+    }
   }
 
   appState.userRole = role;
@@ -776,6 +911,9 @@ function handleAssignmentClick(btn) {
   });
   if (!assignment) return;
 
+  const submitted = appState.submittedAnswers.has(String(id));
+  if (!isCaptainRole() && !(isTeamMemberRole() && submitted)) return;
+
   appState.currentAssignment = id;
   populateAnswerModal(assignment);
   showAnswerModal();
@@ -793,6 +931,11 @@ function hideAnswerModal() {
 }
 
 async function handleSubmitAnswer() {
+  if (!isCaptainRole()) {
+    hideAnswerModal();
+    return;
+  }
+
   if (appState.submittedAnswers.has(String(appState.currentAssignment))) {
     hideAnswerModal();
     return;
