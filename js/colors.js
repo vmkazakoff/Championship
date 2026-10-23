@@ -131,6 +131,7 @@ function applyDerivedTheme(config) {
   const surface = resolveThemeHex(config, 'colorSurface', '#ffffff');
   const page = resolveThemeHex(config, 'colorBackground', '#f9fafb');
   const text = resolveThemeHex(config, 'colorText', '#1f2937');
+  const primary = resolveThemeHex(config, 'colorPrimary', '#0066cc');
   const muted = resolveThemeHex(config, 'colorTextMuted', '#6b7280');
   const dark = isDarkHex(surface);
   const lift = dark ? '#ffffff' : '#000000';
@@ -141,6 +142,7 @@ function applyDerivedTheme(config) {
 
   const root = document.documentElement;
   root.style.setProperty('--theme-text', text);
+  root.style.setProperty('--theme-primary', primary);
   root.style.setProperty('--theme-muted', muted);
   root.style.setProperty('--theme-line', mixHex(surface, lift, dark ? 0.12 : 0.1));
   root.style.setProperty('--theme-hover', mixHex(surface, lift, dark ? 0.08 : 0.04));

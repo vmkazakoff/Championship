@@ -6,6 +6,7 @@ const appState = {
   teamSubmissions: {},
   bootstrap: null,
   assignmentsPage: 0,
+  authRole: 'captain',
 };
 
 const els = {
@@ -34,6 +35,9 @@ const els = {
   authButton: document.getElementById('authButton'),
   loginButton: document.getElementById('loginButton'),
   cancelButton: document.getElementById('cancelButton'),
+  captainTab: document.getElementById('captainTab'),
+  memberTab: document.getElementById('memberTab'),
+  displayNameField: document.getElementById('displayNameField'),
   teamNameInput: document.getElementById('teamNameInput'),
   teamNameField: document.getElementById('teamNameField'),
   roomField: document.getElementById('roomField'),
@@ -97,9 +101,11 @@ function setupEventListeners() {
   els.pagerNext.addEventListener('click', function () {
     goToAssignmentsPage(appState.assignmentsPage + 1);
   });
-
-  document.querySelectorAll('input[name="role"]').forEach(function (radio) {
-    radio.addEventListener('change', handleRoleChange);
+  els.captainTab.addEventListener('click', function () {
+    setAuthRole('captain');
+  });
+  els.memberTab.addEventListener('click', function () {
+    setAuthRole('member');
   });
 
   els.assignmentsTrack.addEventListener('click', function (e) {
@@ -846,38 +852,52 @@ function syncMemberTeamSelect() {
 
 function updateMemberTeamSelectVisibility() {
   if (!els.memberTeamInput) return;
-  const selected = document.querySelector('input[name="role"]:checked');
-  const show = selected && selected.value === 'member';
-  if (show) {
+  if (appState.authRole === 'member') {
     els.memberTeamInput.classList.remove('hidden');
+    els.teamNameInput.classList.add('hidden');
   } else {
     els.memberTeamInput.classList.add('hidden');
+    els.teamNameInput.classList.remove('hidden');
   }
+}
+
+function setAuthRole(role) {
+  appState.authRole = role === 'member' ? 'member' : 'captain';
+  els.captainTab.classList.toggle('role-tab--active', appState.authRole === 'captain');
+  els.memberTab.classList.toggle('role-tab--active', appState.authRole === 'member');
+  updateMemberTeamSelectVisibility();
+}
+
+function getPersonId() {
+  let personId = localStorage.getItem('personId');
+  if (personId) return personId;
+  personId =
+    window.crypto && crypto.randomUUID
+      ? crypto.randomUUID()
+      : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+  localStorage.setItem('personId', personId);
+  return personId;
+}
+
+function resetLoginButton() {
+  els.loginButton.disabled = false;
+  els.loginButton.textContent = 'Войти';
 }
 
 function showAuthModal() {
   els.authModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  const savedName = localStorage.getItem('displayName');
+  if (savedName && !els.displayNameField.value.trim()) {
+    els.displayNameField.value = savedName;
+  }
+  setAuthRole(appState.authRole || 'captain');
   syncMemberTeamSelect();
 }
 
 function hideAuthModal() {
   els.authModal.classList.add('hidden');
   document.body.style.overflow = 'auto';
-}
-
-function handleRoleChange(e) {
-  const role = e.target.value;
-  if (role === 'captain') {
-    els.teamNameInput.classList.remove('hidden');
-    if (els.memberTeamInput) els.memberTeamInput.classList.add('hidden');
-  } else if (role === 'member') {
-    els.teamNameInput.classList.add('hidden');
-    updateMemberTeamSelectVisibility();
-  } else {
-    els.teamNameInput.classList.add('hidden');
-    if (els.memberTeamInput) els.memberTeamInput.classList.add('hidden');
-  }
 }
 
 function composeTeamName(name, room) {
@@ -889,14 +909,14 @@ function composeTeamName(name, room) {
 }
 
 async function handleLogin() {
-  const selected = document.querySelector('input[name="role"]:checked');
-  if (!selected) {
-    alert('Пожалуйста, выберите роль');
+  const role = appState.authRole === 'member' ? 'member' : 'captain';
+  const displayName = els.displayNameField.value.trim();
+  let teamName = null;
+
+  if (!displayName) {
+    alert('Напишите, как к вам обращаться');
     return;
   }
-
-  const role = selected.value;
-  let teamName = null;
 
   els.loginButton.disabled = true;
   els.loginButton.textContent = 'Вход…';
@@ -905,8 +925,7 @@ async function handleLogin() {
     teamName = composeTeamName(els.teamNameField.value, els.roomField ? els.roomField.value : '');
     if (!teamName) {
       alert('Пожалуйста, введите название команды');
-      els.loginButton.disabled = false;
-      els.loginButton.textContent = 'Войти';
+      resetLoginButton();
       return;
     }
 
@@ -914,35 +933,51 @@ async function handleLogin() {
       const result = await postAction({ action: 'register', teamName: teamName });
       if (!result.success) {
         alert('Ошибка регистрации');
-        els.loginButton.disabled = false;
-        els.loginButton.textContent = 'Войти';
+        resetLoginButton();
         return;
       }
     } catch (err) {
       alert('Ошибка соединения с сервером');
-      els.loginButton.disabled = false;
-      els.loginButton.textContent = 'Войти';
+      resetLoginButton();
       return;
     }
-  } else if (role === 'member') {
+  } else {
     teamName = els.memberTeamSelect ? els.memberTeamSelect.value.trim() : '';
     if (!teamName) {
       alert(getKnownTeamNames().length ? 'Пожалуйста, выберите команду' : 'Пока нет зарегистрированных команд');
-      els.loginButton.disabled = false;
-      els.loginButton.textContent = 'Войти';
+      resetLoginButton();
       return;
     }
+  }
+
+  try {
+    const joined = await postAction({
+      action: 'join',
+      displayName: displayName,
+      teamName: teamName,
+      role: role,
+      personId: getPersonId(),
+    });
+    if (!joined.success) {
+      alert('Не удалось записать участника. Обновите скрипт таблицы: нужно действие join.');
+      resetLoginButton();
+      return;
+    }
+  } catch (err) {
+    alert('Ошибка соединения с сервером');
+    resetLoginButton();
+    return;
   }
 
   appState.userRole = role;
   appState.teamName = teamName;
   localStorage.setItem('userRole', role);
+  localStorage.setItem('displayName', displayName);
   if (teamName) localStorage.setItem('teamName', teamName);
   else localStorage.removeItem('teamName');
 
   hideAuthModal();
-  els.loginButton.disabled = false;
-  els.loginButton.textContent = 'Войти';
+  resetLoginButton();
   updateRoleUI();
   loadData();
 }

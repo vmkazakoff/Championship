@@ -99,6 +99,15 @@
     .theme-row { transition: background-color 0.15s; }
     .theme-row:hover { background-color: var(--theme-hover, #f9fafb); }
     .theme-strong { color: var(--theme-text, #1f2937); }
+    .role-tab {
+      color: var(--theme-text, #1f2937);
+      background: transparent;
+      font-weight: 600;
+    }
+    .role-tab--active {
+      background: var(--theme-primary, #0066cc);
+      color: #fff;
+    }
     .theme-modal {
       box-shadow: var(--theme-modal-shadow, 0 24px 60px rgba(15, 23, 42, .28), 0 8px 24px rgba(15, 23, 42, .18));
     }
@@ -206,24 +215,15 @@
     <div class="flex items-center justify-center min-h-screen p-4">
       <div data-theme="card-bg rounded" class="theme-modal max-w-md w-full p-6">
         <h3 class="text-xl font-bold mb-6">Вход в систему</h3>
-        <div class="mb-6">
-          <label class="block text-sm font-medium mb-2">Выберите роль:</label>
-          <div class="space-y-2">
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" name="role" value="captain" class="mr-2">
-              <span>Капитан команды</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" name="role" value="member" class="mr-2">
-              <span>Участник команды</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" name="role" value="observer" class="mr-2">
-              <span>Наблюдатель</span>
-            </label>
-          </div>
+        <div id="roleTabs" class="theme-soft grid grid-cols-2 gap-1 p-1 mb-6" data-theme="rounded">
+          <button id="captainTab" type="button" class="role-tab role-tab--active py-2 px-3" data-theme="rounded">Капитан</button>
+          <button id="memberTab" type="button" class="role-tab py-2 px-3" data-theme="rounded">Участник</button>
         </div>
-        <div id="teamNameInput" class="mb-6 hidden">
+        <div class="mb-6">
+          <label class="block text-sm font-medium mb-2" for="displayNameField">Как к вам обращаться</label>
+          <input type="text" id="displayNameField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Имя, почта или табельный номер">
+        </div>
+        <div id="teamNameInput" class="mb-6">
           <label class="block text-sm font-medium mb-2">Название команды:</label>
           <input type="text" id="teamNameField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите название команды">
           <label class="block text-sm font-medium mt-4 mb-2">Номер комнаты в ВКС:</label>
