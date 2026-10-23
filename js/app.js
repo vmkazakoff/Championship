@@ -116,6 +116,7 @@ function setupEventListeners() {
     selectedAnswerFile = file;
     els.answerFileName.textContent = file.name;
     els.clearAnswerFile.classList.remove('hidden');
+    lockPromptWhileFileSelected();
   });
   els.clearAnswerFile.addEventListener('click', clearSelectedAnswerFile);
   els.refreshButton.addEventListener('click', loadData);
@@ -775,12 +776,28 @@ function clearSelectedAnswerFile() {
   if (els.answerFile) els.answerFile.value = '';
   if (els.answerFileName) els.answerFileName.textContent = '';
   if (els.clearAnswerFile) els.clearAnswerFile.classList.add('hidden');
+  lockPromptWhileFileSelected();
+}
+
+function lockPromptWhileFileSelected() {
+  const submitted = appState.submittedAnswers.has(String(appState.currentAssignment || ''));
+  if (!isCaptainRole() || submitted) return;
+  els.answerText.disabled = Boolean(selectedAnswerFile);
+}
+
+function fileDownloadUrl(url) {
+  const value = String(url || '').trim();
+  const pathId = value.match(/\/file\/d\/([^/?]+)/);
+  const queryId = value.match(/[?&]id=([^&]+)/);
+  const fileId = (pathId && pathId[1]) || (queryId && queryId[1]);
+  if (!fileId) return value;
+  return 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(fileId);
 }
 
 function showStoredFile(url) {
   els.answerText.classList.add('hidden');
   els.answerFileWrap.classList.add('hidden');
-  els.answerFileLink.href = url;
+  els.answerFileLink.href = fileDownloadUrl(url);
   els.answerFileLinkWrap.classList.remove('hidden');
 }
 
@@ -871,8 +888,10 @@ function populateAnswerModal(assignment, options) {
   }
 
   els.answerText.disabled = false;
+  lockPromptWhileFileSelected();
   els.answerWarning.classList.remove('hidden');
   els.submitAnswerButton.textContent = 'Отправить';
+  els.submitAnswerButton.classList.remove('is-sending');
 }
 
 function updateRoleUI() {
@@ -1179,6 +1198,7 @@ const FILE_CHUNK_CHARS = 100000;
 
 async function submitAnswerFile(file) {
   els.submitAnswerButton.disabled = true;
+  els.submitAnswerButton.classList.add('is-sending');
 
   try {
     const base64 = await readFileAsBase64(file);
@@ -1197,7 +1217,6 @@ async function submitAnswerFile(file) {
     }
 
     for (let index = 0; index < total; index++) {
-      els.submitAnswerButton.textContent = 'Отправка… ' + (index + 1) + '/' + total;
       const chunk = base64.slice(index * FILE_CHUNK_CHARS, (index + 1) * FILE_CHUNK_CHARS);
       const sent = await postAction({
         action: 'submit-file-chunk',
@@ -1211,7 +1230,6 @@ async function submitAnswerFile(file) {
       }
     }
 
-    els.submitAnswerButton.textContent = 'Сохраняем…';
     const result = await postAction({
       action: 'submit-file-finish',
       uploadId: started.uploadId,
@@ -1236,6 +1254,7 @@ async function submitAnswerFile(file) {
     alert('Ошибка отправки файла. Попробуйте позже.');
   } finally {
     els.submitAnswerButton.disabled = false;
+    els.submitAnswerButton.classList.remove('is-sending');
     if (!appState.submittedAnswers.has(String(appState.currentAssignment))) {
       els.submitAnswerButton.textContent = 'Отправить';
     }
