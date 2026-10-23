@@ -1237,6 +1237,7 @@ async function handleSubmitAnswer() {
       showAnswerResult(result.score, result.feedback);
       els.answerResultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else {
+      if (result.message) alert(result.message);
       hideAnswerModal();
     }
 
@@ -1305,9 +1306,10 @@ async function submitAnswerFile(file) {
     appState.submittedAnswers.add(assignmentId);
     appState.teamSubmissions[assignmentId] = {
       answer: result.answer || composeStoredAnswer(file.name, result.url, answerText),
-      score: null,
-      feedback: null,
+      score: result.score != null ? result.score : null,
+      feedback: result.feedback || null,
     };
+    if (result.score == null && result.message) alert(result.message);
     clearSelectedAnswerFile();
     hideAnswerModal();
     if (appState.bootstrap) renderAssignments(appState.bootstrap);
