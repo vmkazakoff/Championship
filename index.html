@@ -99,6 +99,9 @@
     .theme-row { transition: background-color 0.15s; }
     .theme-row:hover { background-color: var(--theme-hover, #f9fafb); }
     .theme-strong { color: var(--theme-text, #1f2937); }
+    .theme-modal {
+      box-shadow: var(--theme-modal-shadow, 0 24px 60px rgba(15, 23, 42, .28), 0 8px 24px rgba(15, 23, 42, .18));
+    }
   </style>
 </head>
 <body data-theme="page-bg page-text" class="min-h-screen">
@@ -201,7 +204,7 @@
   <!-- Auth Modal -->
   <div id="authModal" class="fixed inset-0 bg-black/50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div data-theme="card-bg rounded" class="shadow-xl max-w-md w-full p-6">
+      <div data-theme="card-bg rounded" class="theme-modal max-w-md w-full p-6">
         <h3 class="text-xl font-bold mb-6">Вход в систему</h3>
         <div class="mb-6">
           <label class="block text-sm font-medium mb-2">Выберите роль:</label>
@@ -232,7 +235,7 @@
         </div>
         <div class="flex gap-3">
           <button id="loginButton" type="button" data-theme="primary-bg rounded" class="flex-1 text-white py-2 px-4 font-medium hover:opacity-90 transition-opacity">Войти</button>
-          <button id="cancelButton" type="button" class="theme-secondary-btn flex-1 py-2 px-4 rounded-lg font-medium transition-colors">Отмена</button>
+          <button id="cancelButton" type="button" data-theme="rounded" class="theme-secondary-btn flex-1 py-2 px-4 font-medium transition-colors">Отмена</button>
         </div>
       </div>
     </div>
@@ -241,7 +244,7 @@
   <!-- Answer Modal -->
   <div id="answerModal" class="fixed inset-0 bg-black/50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div data-theme="card-bg rounded" class="shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div data-theme="card-bg rounded" class="theme-modal max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
         <h3 id="answerModalTitle" class="text-xl font-bold mb-2">Задание</h3>
         <p id="answerModalDescription" class="text-sm mb-4 whitespace-pre-wrap" data-theme="muted-text"></p>
         <div class="mb-4">
@@ -263,7 +266,7 @@
         </div>
         <div class="flex gap-3">
           <button id="submitAnswerButton" type="button" data-theme="primary-bg rounded" class="flex-1 text-white py-2 px-4 font-medium hover:opacity-90 transition-opacity">Отправить</button>
-          <button id="cancelAnswerButton" type="button" class="theme-secondary-btn flex-1 py-2 px-4 rounded-lg font-medium transition-colors">Отмена</button>
+          <button id="cancelAnswerButton" type="button" data-theme="rounded" class="theme-secondary-btn flex-1 py-2 px-4 font-medium transition-colors">Отмена</button>
         </div>
       </div>
     </div>
@@ -272,7 +275,7 @@
   <!-- Links / QR Modal -->
   <div id="linksModal" class="fixed inset-0 bg-black/50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-2 sm:p-4">
-      <div data-theme="card-bg rounded" class="w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-xl">
+      <div data-theme="card-bg rounded" class="theme-modal w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         <div class="flex items-center justify-between p-4 sm:p-6 border-b theme-line">
           <h3 class="text-lg sm:text-xl font-bold">ИИ-сервисы</h3>
           <button id="closeLinksModalTop" type="button" class="theme-icon-btn p-2 rounded-full transition-colors shrink-0">

@@ -129,11 +129,15 @@ function isDarkHex(hex) {
 
 function applyDerivedTheme(config) {
   const surface = resolveThemeHex(config, 'colorSurface', '#ffffff');
+  const page = resolveThemeHex(config, 'colorBackground', '#f9fafb');
   const text = resolveThemeHex(config, 'colorText', '#1f2937');
   const muted = resolveThemeHex(config, 'colorTextMuted', '#6b7280');
   const dark = isDarkHex(surface);
   const lift = dark ? '#ffffff' : '#000000';
   const controlBg = mixHex(surface, lift, dark ? 0.16 : 0.1);
+  const modalShadow = isDarkHex(page)
+    ? '0 0 0 1px ' + mixHex(surface, '#ffffff', 0.18) + ', 0 28px 80px rgba(0,0,0,.75), 0 0 48px rgba(255,255,255,.08)'
+    : '0 24px 60px rgba(15,23,42,.28), 0 8px 24px rgba(15,23,42,.18)';
 
   const root = document.documentElement;
   root.style.setProperty('--theme-text', text);
@@ -147,6 +151,7 @@ function applyDerivedTheme(config) {
   root.style.setProperty('--theme-control-hover', mixHex(controlBg, lift, 0.1));
   root.style.setProperty('--theme-field-bg', dark ? mixHex(surface, '#ffffff', 0.08) : '#ffffff');
   root.style.setProperty('--theme-field-text', dark ? text : '#111827');
+  root.style.setProperty('--theme-modal-shadow', modalShadow);
   root.classList.toggle('theme-dark', dark);
 }
 
