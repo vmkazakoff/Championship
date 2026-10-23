@@ -5,27 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Чемпионат по промптингу</title>
   <link id="favicon" rel="icon" href="">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      safelist: [
-        'bg-gray-50', 'bg-white', 'bg-gray-200', 'bg-gray-300', 'bg-gray-500', 'bg-gray-800',
-        'bg-blue-800', 'bg-green-500', 'bg-red-500', 'bg-yellow-50',
-        'text-gray-50', 'text-white', 'text-gray-300', 'text-gray-500', 'text-gray-600', 'text-gray-800',
-        'text-blue-800', 'text-green-500', 'text-red-500', 'text-yellow-600', 'text-yellow-800',
-        'border-gray-200', 'border-gray-300', 'border-yellow-200',
-        'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-full',
-        'rounded-t-sm', 'rounded-t', 'rounded-t-md', 'rounded-t-lg', 'rounded-t-xl', 'rounded-t-2xl',
-        'rounded-b-sm', 'rounded-b', 'rounded-b-md', 'rounded-b-lg', 'rounded-b-xl', 'rounded-b-2xl',
-        'from-blue-800', 'to-blue-800', 'hover:from-blue-800', 'hover:to-blue-800',
-        'bg-[#0066CC]', 'text-[#0066CC]', 'bg-[#FF6600]', 'text-[#FF6600]',
-        'group-hover:text-[var(--qr-accent)]',
-        'opacity-60', 'hover:opacity-80',
-        'line-clamp-2', 'line-clamp-3',
-        'space-y-3',
-      ],
-    };
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @source inline("bg-gray-50 bg-white bg-gray-200 bg-gray-300 bg-gray-500 bg-gray-700 bg-gray-800 bg-blue-800 bg-green-500 bg-red-500 bg-yellow-50 text-gray-50 text-white text-gray-300 text-gray-500 text-gray-600 text-gray-800 text-blue-800 text-green-500 text-red-500 text-yellow-600 text-yellow-800 border-gray-200 border-gray-300 border-yellow-200 rounded-sm rounded rounded-md rounded-lg rounded-xl rounded-2xl rounded-full rounded-t-sm rounded-t rounded-t-md rounded-t-lg rounded-t-xl rounded-t-2xl rounded-b-sm rounded-b rounded-b-md rounded-b-lg rounded-b-xl rounded-b-2xl from-blue-800 to-blue-800 hover:from-blue-800 hover:to-blue-800 hover:bg-gray-700 group-hover:bg-gray-700 bg-[#0066CC] text-[#0066CC] bg-[#FF6600] text-[#FF6600] group-hover:text-[var(--qr-accent)] opacity-60 hover:opacity-80 line-clamp-2 line-clamp-3 space-y-3");
+  </style>
   <style>
     @keyframes spin-slow {
       from { transform: rotate(0deg); }
@@ -79,6 +62,9 @@
     .assignment-btn:focus-visible {
       outline: 2px solid #9ca3af;
       outline-offset: 2px;
+    }
+    button:not(:disabled) {
+      cursor: pointer;
     }
     .theme-line { border-color: var(--theme-line, #e5e7eb); }
     .theme-soft { background-color: var(--theme-soft, #f9fafb); }
