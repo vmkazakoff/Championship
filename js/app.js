@@ -1137,7 +1137,7 @@ async function handleSubmitAnswer() {
     });
 
     if (!result.success) {
-      alert('Ошибка отправки ответа');
+      alert(result.message || 'Ошибка отправки ответа');
       return;
     }
 
@@ -1175,21 +1175,47 @@ async function handleSubmitAnswer() {
   }
 }
 
+const FILE_CHUNK_CHARS = 100000;
+
 async function submitAnswerFile(file) {
   els.submitAnswerButton.disabled = true;
-  els.submitAnswerButton.textContent = 'Отправка…';
 
   try {
     const base64 = await readFileAsBase64(file);
-    const result = await postAction({
-      action: 'submit-file',
+    const total = Math.ceil(base64.length / FILE_CHUNK_CHARS) || 1;
+    const started = await postAction({
+      action: 'submit-file-start',
       teamName: appState.teamName,
       assignmentNumber: Number(appState.currentAssignment),
       fileName: file.name,
       mimeType: file.type || 'application/octet-stream',
-      base64: base64,
+      total: total,
     });
+    if (!started.success || !started.uploadId) {
+      alert(started.message || 'Ошибка отправки файла');
+      return;
+    }
 
+    for (let index = 0; index < total; index++) {
+      els.submitAnswerButton.textContent = 'Отправка… ' + (index + 1) + '/' + total;
+      const chunk = base64.slice(index * FILE_CHUNK_CHARS, (index + 1) * FILE_CHUNK_CHARS);
+      const sent = await postAction({
+        action: 'submit-file-chunk',
+        uploadId: started.uploadId,
+        index: index,
+        base64: chunk,
+      });
+      if (!sent.success) {
+        alert(sent.message || 'Ошибка отправки файла');
+        return;
+      }
+    }
+
+    els.submitAnswerButton.textContent = 'Сохраняем…';
+    const result = await postAction({
+      action: 'submit-file-finish',
+      uploadId: started.uploadId,
+    });
     if (!result.success || !result.url) {
       alert(result.message || 'Ошибка отправки файла');
       return;
