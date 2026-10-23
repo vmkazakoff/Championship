@@ -48,6 +48,12 @@ const els = {
   answerModalDescription: document.getElementById('answerModalDescription'),
   answerPromptLabel: document.getElementById('answerPromptLabel'),
   answerText: document.getElementById('answerText'),
+  answerFileWrap: document.getElementById('answerFileWrap'),
+  answerFile: document.getElementById('answerFile'),
+  answerFileName: document.getElementById('answerFileName'),
+  clearAnswerFile: document.getElementById('clearAnswerFile'),
+  answerFileLinkWrap: document.getElementById('answerFileLinkWrap'),
+  answerFileLink: document.getElementById('answerFileLink'),
   answerWarning: document.getElementById('answerWarning'),
   answerResultSection: document.getElementById('answerResultSection'),
   answerScoreDisplay: document.getElementById('answerScoreDisplay'),
@@ -64,8 +70,10 @@ const els = {
 };
 
 let isFirstLoad = true;
+let selectedAnswerFile = null;
 const MIN_CARD_WIDTH = 165;
 const CARD_GAP = 16;
+const MAX_ANSWER_FILE_BYTES = 10 * 1024 * 1024;
 
 document.addEventListener('DOMContentLoaded', function () {
   setupEventListeners();
@@ -94,6 +102,22 @@ function setupEventListeners() {
     e.preventDefault();
     handleSubmitAnswer();
   });
+  els.answerFile.addEventListener('change', function () {
+    const file = els.answerFile.files && els.answerFile.files[0];
+    if (!file) {
+      clearSelectedAnswerFile();
+      return;
+    }
+    if (file.size > MAX_ANSWER_FILE_BYTES) {
+      alert('Файл больше 10 МБ');
+      clearSelectedAnswerFile();
+      return;
+    }
+    selectedAnswerFile = file;
+    els.answerFileName.textContent = file.name;
+    els.clearAnswerFile.classList.remove('hidden');
+  });
+  els.clearAnswerFile.addEventListener('click', clearSelectedAnswerFile);
   els.refreshButton.addEventListener('click', loadData);
   els.pagerPrev.addEventListener('click', function () {
     goToAssignmentsPage(appState.assignmentsPage - 1);
@@ -742,6 +766,46 @@ function refreshAnswerModalIfOpen() {
   if (assignment) populateAnswerModal(assignment, { preserveDraft: true });
 }
 
+function isFileAnswer(value) {
+  return /^https?:\/\//i.test(String(value || '').trim());
+}
+
+function clearSelectedAnswerFile() {
+  selectedAnswerFile = null;
+  if (els.answerFile) els.answerFile.value = '';
+  if (els.answerFileName) els.answerFileName.textContent = '';
+  if (els.clearAnswerFile) els.clearAnswerFile.classList.add('hidden');
+}
+
+function showStoredFile(url) {
+  els.answerText.classList.add('hidden');
+  els.answerFileWrap.classList.add('hidden');
+  els.answerFileLink.href = url;
+  els.answerFileLinkWrap.classList.remove('hidden');
+}
+
+function showAnswerTextField(captain, submitted) {
+  els.answerFileLinkWrap.classList.add('hidden');
+  els.answerText.classList.remove('hidden');
+  if (captain && !submitted) els.answerFileWrap.classList.remove('hidden');
+  else els.answerFileWrap.classList.add('hidden');
+}
+
+function readFileAsBase64(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      const result = String(reader.result || '');
+      const comma = result.indexOf(',');
+      resolve(comma === -1 ? result : result.slice(comma + 1));
+    };
+    reader.onerror = function () {
+      reject(reader.error);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function populateAnswerModal(assignment, options) {
   const preserveDraft = options && options.preserveDraft;
   const id = String(assignment.id);
@@ -764,14 +828,32 @@ function populateAnswerModal(assignment, options) {
   }
 
   if (submitted && submission) {
-    if (els.answerText.value !== submission.answer) {
-      els.answerText.value = submission.answer;
+    const fileAnswer = isFileAnswer(submission.answer);
+    if (els.answerPromptLabel) {
+      if (fileAnswer) {
+        els.answerPromptLabel.textContent = captain ? 'Ваш файл:' : 'Файл команды:';
+      } else {
+        els.answerPromptLabel.textContent = captain ? 'Ваш промпт:' : 'Промпт команды:';
+      }
+    }
+    if (fileAnswer) {
+      showStoredFile(String(submission.answer).trim());
+    } else {
+      showAnswerTextField(captain, true);
+      if (els.answerText.value !== submission.answer) {
+        els.answerText.value = submission.answer;
+      }
     }
     els.answerText.disabled = true;
     els.answerWarning.classList.add('hidden');
     if (captain) els.submitAnswerButton.textContent = 'Закрыть';
     showAnswerResult(submission.score, submission.feedback);
     return;
+  }
+
+  showAnswerTextField(captain, false);
+  if (els.answerPromptLabel) {
+    els.answerPromptLabel.textContent = captain ? 'Ваш промпт:' : 'Промпт команды:';
   }
 
   if (!captain) {
@@ -784,6 +866,7 @@ function populateAnswerModal(assignment, options) {
 
   if (!preserveDraft) {
     els.answerText.value = '';
+    clearSelectedAnswerFile();
     hideAnswerResult();
   }
 
@@ -1033,8 +1116,12 @@ async function handleSubmitAnswer() {
   }
 
   const answer = els.answerText.value.trim();
+  if (selectedAnswerFile) {
+    await submitAnswerFile(selectedAnswerFile);
+    return;
+  }
   if (!answer) {
-    alert('Пожалуйста, введите промпт');
+    alert('Введите промпт или прикрепите файл');
     return;
   }
 
@@ -1080,6 +1167,47 @@ async function handleSubmitAnswer() {
     loadData();
   } catch (err) {
     alert('Ошибка отправки ответа. Попробуйте позже.');
+  } finally {
+    els.submitAnswerButton.disabled = false;
+    if (!appState.submittedAnswers.has(String(appState.currentAssignment))) {
+      els.submitAnswerButton.textContent = 'Отправить';
+    }
+  }
+}
+
+async function submitAnswerFile(file) {
+  els.submitAnswerButton.disabled = true;
+  els.submitAnswerButton.textContent = 'Отправка…';
+
+  try {
+    const base64 = await readFileAsBase64(file);
+    const result = await postAction({
+      action: 'submit-file',
+      teamName: appState.teamName,
+      assignmentNumber: Number(appState.currentAssignment),
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      base64: base64,
+    });
+
+    if (!result.success || !result.url) {
+      alert(result.message || 'Ошибка отправки файла');
+      return;
+    }
+
+    const assignmentId = String(appState.currentAssignment);
+    appState.submittedAnswers.add(assignmentId);
+    appState.teamSubmissions[assignmentId] = {
+      answer: result.url,
+      score: null,
+      feedback: null,
+    };
+    clearSelectedAnswerFile();
+    hideAnswerModal();
+    if (appState.bootstrap) renderAssignments(appState.bootstrap);
+    loadData();
+  } catch (err) {
+    alert('Ошибка отправки файла. Попробуйте позже.');
   } finally {
     els.submitAnswerButton.disabled = false;
     if (!appState.submittedAnswers.has(String(appState.currentAssignment))) {
