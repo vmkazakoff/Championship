@@ -25,6 +25,7 @@ const els = {
   assignmentsDots: document.getElementById('assignmentsDots'),
   pagerPrev: document.getElementById('pagerPrev'),
   pagerNext: document.getElementById('pagerNext'),
+  customHtmlBlock: document.getElementById('customHtmlBlock'),
   leaderboard: document.getElementById('leaderboard'),
   leaderboardSection: document.getElementById('leaderboardSection'),
   refreshButton: document.getElementById('refreshButton'),
@@ -140,6 +141,7 @@ async function loadData() {
     const data = await fetchBootstrap();
     appState.bootstrap = data;
     applyPageMeta(data.config);
+    applyCustomHtml(data.config);
     syncMemberTeamSelect();
     renderAssignments(data);
     applyTheme(data.config);
@@ -205,6 +207,38 @@ function applyPageMeta(config) {
   } else {
     els.logoWrap.classList.add('hidden');
   }
+}
+
+let appliedCustomHtml = '';
+
+function activateInsertedScripts(container) {
+  const oldScripts = container.querySelectorAll('script');
+  oldScripts.forEach(function (oldScript) {
+    const script = document.createElement('script');
+    for (let i = 0; i < oldScript.attributes.length; i++) {
+      const attr = oldScript.attributes[i];
+      script.setAttribute(attr.name, attr.value);
+    }
+    script.text = oldScript.textContent;
+    oldScript.replaceWith(script);
+  });
+}
+
+function applyCustomHtml(config) {
+  const html = config && config.customHtml ? String(config.customHtml).trim() : '';
+  if (!html) {
+    appliedCustomHtml = '';
+    els.customHtmlBlock.innerHTML = '';
+    els.customHtmlBlock.classList.add('hidden');
+    return;
+  }
+
+  if (html === appliedCustomHtml) return;
+
+  appliedCustomHtml = html;
+  els.customHtmlBlock.innerHTML = html;
+  activateInsertedScripts(els.customHtmlBlock);
+  els.customHtmlBlock.classList.remove('hidden');
 }
 
 function assignmentCardTitle(description, id) {
