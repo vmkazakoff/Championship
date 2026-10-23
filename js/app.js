@@ -801,11 +801,9 @@ function updateRoleUI() {
     }
     els.teamNameLabel.innerHTML = html;
     els.teamNameLabel.classList.remove('hidden');
-    els.teamNameLabel.classList.add('inline-flex');
   } else {
     els.teamNameLabel.innerHTML = '';
     els.teamNameLabel.classList.add('hidden');
-    els.teamNameLabel.classList.remove('inline-flex');
   }
 
   if (appState.bootstrap) {
