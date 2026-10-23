@@ -627,7 +627,7 @@ function updateLeaderboard(teams) {
   els.leaderboard.innerHTML = sorted
     .map(function (team, index) {
       return (
-        '<div class="flex items-center justify-between py-3 px-4 hover:bg-gray-50 rounded-xl transition-colors">' +
+        '<div class="theme-row flex items-center justify-between py-3 px-4 rounded-xl">' +
         '<div class="flex items-center gap-4 min-w-0">' +
         '<div class="text-2xl font-bold w-8 shrink-0">' +
         (index + 1) +
@@ -1086,7 +1086,7 @@ function formatFeedbackHtml(text) {
 
     html +=
       '<div>' +
-      '<div class="font-semibold text-gray-800 mb-1">' +
+      '<div class="theme-strong font-semibold mb-1">' +
       escapeHtml(label) +
       '</div>' +
       '<div class="leading-relaxed">' +

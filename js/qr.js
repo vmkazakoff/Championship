@@ -65,11 +65,11 @@ function buildLinksModalContent(container, config) {
     card.title = link.url;
     card.style.setProperty('--qr-accent', accentHex);
     card.className =
-      'group block rounded-xl border border-gray-200 bg-white p-6 text-center no-underline text-inherit ' +
+      'group block rounded-xl border border-gray-200 bg-white p-6 text-center no-underline text-gray-800 ' +
       'transition-colors duration-300 hover:border-gray-300';
 
     card.innerHTML =
-      '<h4 class="text-lg font-semibold mb-5 transition-colors duration-300 group-hover:text-[var(--qr-accent)]">' +
+      '<h4 class="text-lg font-semibold text-gray-800 mb-5 transition-colors duration-300 group-hover:text-[var(--qr-accent)]">' +
       escapeHtml(link.title) +
       '</h4>' +
       '<div class="flex justify-center mb-5"><div class="qr-canvas-host"></div></div>' +

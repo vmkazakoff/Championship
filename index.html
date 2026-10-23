@@ -80,6 +80,25 @@
       outline: 2px solid #9ca3af;
       outline-offset: 2px;
     }
+    .theme-line { border-color: var(--theme-line, #e5e7eb); }
+    .theme-soft { background-color: var(--theme-soft, #f9fafb); }
+    .theme-track { background-color: var(--theme-track, #e5e7eb); }
+    .theme-icon-btn { color: var(--theme-text, #1f2937); }
+    .theme-icon-btn:hover { background-color: var(--theme-hover, #f3f4f6); }
+    .theme-secondary-btn {
+      background-color: var(--theme-control-bg, #e5e7eb);
+      color: var(--theme-control-text, #111827);
+    }
+    .theme-secondary-btn:hover { background-color: var(--theme-control-hover, #d1d5db); }
+    .theme-field {
+      background-color: var(--theme-field-bg, #ffffff);
+      color: var(--theme-field-text, #111827);
+      border-color: var(--theme-line, #d1d5db);
+    }
+    .theme-field::placeholder { color: var(--theme-muted, #6b7280); }
+    .theme-row { transition: background-color 0.15s; }
+    .theme-row:hover { background-color: var(--theme-hover, #f9fafb); }
+    .theme-strong { color: var(--theme-text, #1f2937); }
   </style>
 </head>
 <body data-theme="page-bg page-text" class="min-h-screen">
@@ -122,7 +141,7 @@
         Общий дашборд
         <span id="teamNameLabel" class="text-base font-normal hidden" data-theme="muted-text"></span>
       </h2>
-      <button id="refreshButton" type="button" class="p-3 rounded-full hover:bg-gray-100 transition-colors shrink-0" title="Обновить">
+      <button id="refreshButton" type="button" class="theme-icon-btn p-3 rounded-full transition-colors shrink-0" title="Обновить">
         <svg id="refreshIcon" class="w-6 h-6" data-theme="accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
         </svg>
@@ -135,14 +154,14 @@
         <div id="assignmentsTrack" class="flex transition-transform duration-300 ease-out"></div>
       </div>
       <div id="assignmentsPager" class="hidden items-center justify-center gap-4 mt-4">
-        <button id="pagerPrev" type="button" data-theme="card-bg rounded" class="pager-nav w-8 h-8 flex items-center justify-center shadow-sm border border-gray-200 hover:opacity-90 transition-opacity disabled:pointer-events-none disabled:opacity-40" aria-label="Предыдущая страница">
-          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <button id="pagerPrev" type="button" data-theme="card-bg rounded" class="theme-icon-btn pager-nav w-8 h-8 flex items-center justify-center shadow-sm border theme-line hover:opacity-90 transition-opacity disabled:pointer-events-none disabled:opacity-40" aria-label="Предыдущая страница">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
         </button>
         <div id="assignmentsDots" class="flex items-center gap-2"></div>
-        <button id="pagerNext" type="button" data-theme="card-bg rounded" class="pager-nav w-8 h-8 flex items-center justify-center shadow-sm border border-gray-200 hover:opacity-90 transition-opacity disabled:pointer-events-none disabled:opacity-40" aria-label="Следующая страница">
-          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <button id="pagerNext" type="button" data-theme="card-bg rounded" class="theme-icon-btn pager-nav w-8 h-8 flex items-center justify-center shadow-sm border theme-line hover:opacity-90 transition-opacity disabled:pointer-events-none disabled:opacity-40" aria-label="Следующая страница">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
           </svg>
         </button>
@@ -150,13 +169,13 @@
     </div>
 
     <!-- Прогресс -->
-    <section data-theme="card-bg rounded" class="p-6 sm:p-8 mb-6 sm:mb-8 shadow-sm border border-gray-200">
+    <section data-theme="card-bg rounded" class="p-6 sm:p-8 mb-6 sm:mb-8 shadow-sm border theme-line">
       <div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-base sm:text-lg font-semibold">Прогресс</h3>
           <span id="progressPercentage" class="text-sm font-medium" data-theme="muted-text">0%</span>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
+        <div class="theme-track w-full rounded-full h-3">
           <div id="progressBar" data-theme="accent-bg" class="h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
         <div class="flex justify-between items-center text-xs mt-2 gap-4" data-theme="muted-text">
@@ -169,7 +188,7 @@
     <div id="customHtmlBlock" class="hidden mb-6 sm:mb-8"></div>
 
     <!-- Рейтинг -->
-    <section id="leaderboardSection" data-theme="card-bg rounded" class="p-6 sm:p-8 shadow-sm border border-gray-200">
+    <section id="leaderboardSection" data-theme="card-bg rounded" class="p-6 sm:p-8 shadow-sm border theme-line">
       <h2 class="text-xl font-bold mb-6">Рейтинг команд</h2>
       <div id="leaderboard">
         <div class="text-center py-8" data-theme="muted-text">
@@ -203,17 +222,17 @@
         </div>
         <div id="teamNameInput" class="mb-6 hidden">
           <label class="block text-sm font-medium mb-2">Название команды:</label>
-          <input type="text" id="teamNameField" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите название команды">
+          <input type="text" id="teamNameField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите название команды">
         </div>
         <div id="memberTeamInput" class="mb-6 hidden">
           <label class="block text-sm font-medium mb-2">Ваша команда:</label>
-          <select id="memberTeamSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <select id="memberTeamSelect" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="" disabled selected>Выберите команду</option>
           </select>
         </div>
         <div class="flex gap-3">
           <button id="loginButton" type="button" data-theme="primary-bg rounded" class="flex-1 text-white py-2 px-4 font-medium hover:opacity-90 transition-opacity">Войти</button>
-          <button id="cancelButton" type="button" class="flex-1 bg-gray-200 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors">Отмена</button>
+          <button id="cancelButton" type="button" class="theme-secondary-btn flex-1 py-2 px-4 rounded-lg font-medium transition-colors">Отмена</button>
         </div>
       </div>
     </div>
@@ -227,15 +246,15 @@
         <p id="answerModalDescription" class="text-sm mb-4 whitespace-pre-wrap" data-theme="muted-text"></p>
         <div class="mb-4">
           <label id="answerPromptLabel" class="block text-sm font-medium mb-2">Ваш промпт:</label>
-          <textarea id="answerText" rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Введите ваш промпт…"></textarea>
+          <textarea id="answerText" rows="8" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Введите ваш промпт…"></textarea>
         </div>
         <div id="answerWarning" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p class="text-sm text-yellow-800">После отправки изменить промпт будет невозможно</p>
         </div>
-        <div id="answerResultSection" class="hidden mb-4 border-t border-gray-200 pt-4">
+        <div id="answerResultSection" class="hidden mb-4 border-t theme-line pt-4">
           <div id="answerFeedbackWrap" class="hidden mb-4">
             <p class="text-sm font-semibold mb-2">Обратная связь</p>
-            <div id="answerFeedbackDisplay" class="text-sm p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-3" data-theme="muted-text"></div>
+            <div id="answerFeedbackDisplay" class="theme-soft text-sm p-3 rounded-lg border theme-line space-y-3" data-theme="muted-text"></div>
           </div>
           <div class="flex items-baseline justify-between gap-4">
             <span class="text-sm font-semibold">Оценка</span>
@@ -244,7 +263,7 @@
         </div>
         <div class="flex gap-3">
           <button id="submitAnswerButton" type="button" data-theme="primary-bg rounded" class="flex-1 text-white py-2 px-4 font-medium hover:opacity-90 transition-opacity">Отправить</button>
-          <button id="cancelAnswerButton" type="button" class="flex-1 bg-gray-200 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors">Отмена</button>
+          <button id="cancelAnswerButton" type="button" class="theme-secondary-btn flex-1 py-2 px-4 rounded-lg font-medium transition-colors">Отмена</button>
         </div>
       </div>
     </div>
@@ -254,14 +273,14 @@
   <div id="linksModal" class="fixed inset-0 bg-black/50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-2 sm:p-4">
       <div data-theme="card-bg rounded" class="w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-xl">
-        <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between p-4 sm:p-6 border-b theme-line">
           <h3 class="text-lg sm:text-xl font-bold">ИИ-сервисы</h3>
-          <button id="closeLinksModalTop" type="button" class="p-2 rounded-full hover:bg-gray-100 transition-colors shrink-0">
+          <button id="closeLinksModalTop" type="button" class="theme-icon-btn p-2 rounded-full transition-colors shrink-0">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
         <div id="linksModalContent" class="flex-1 overflow-y-auto p-4 sm:p-6"></div>
-        <div class="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+        <div class="theme-soft p-4 sm:p-6 border-t theme-line">
           <button id="closeLinksModal" type="button" data-theme="primary-bg rounded" class="w-full text-white py-3 px-4 font-medium hover:opacity-90 transition-opacity">Закрыть</button>
         </div>
       </div>

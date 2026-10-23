@@ -65,6 +65,91 @@ function parseColorValue(value) {
   return { type: 'class', token: value };
 }
 
+function resolveThemeHex(config, key, fallback) {
+  const parsed = config && config[key] ? parseColorValue(config[key]) : null;
+  if (parsed && parsed.type === 'hex') return parsed.hex;
+  return fallback;
+}
+
+function hexToRgb(hex) {
+  let value = String(hex).replace('#', '');
+  if (value.length === 3) {
+    value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+  }
+  if (value.length >= 6) value = value.slice(0, 6);
+  const number = parseInt(value, 16);
+  return {
+    r: (number >> 16) & 255,
+    g: (number >> 8) & 255,
+    b: number & 255,
+  };
+}
+
+function rgbToHex(red, green, blue) {
+  return (
+    '#' +
+    [red, green, blue]
+      .map(function (channel) {
+        const clamped = Math.max(0, Math.min(255, Math.round(channel)));
+        const pair = clamped.toString(16);
+        return pair.length === 1 ? '0' + pair : pair;
+      })
+      .join('')
+  );
+}
+
+function mixHex(fromHex, toHex, weight) {
+  const from = hexToRgb(fromHex);
+  const to = hexToRgb(toHex);
+  return rgbToHex(
+    from.r + (to.r - from.r) * weight,
+    from.g + (to.g - from.g) * weight,
+    from.b + (to.b - from.b) * weight
+  );
+}
+
+function channelLuminance(channel) {
+  const value = channel / 255;
+  if (value <= 0.03928) return value / 12.92;
+  return Math.pow((value + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(hex) {
+  const rgb = hexToRgb(hex);
+  return (
+    0.2126 * channelLuminance(rgb.r) +
+    0.7152 * channelLuminance(rgb.g) +
+    0.0722 * channelLuminance(rgb.b)
+  );
+}
+
+function isDarkHex(hex) {
+  return relativeLuminance(hex) < 0.4;
+}
+
+function applyDerivedTheme(config) {
+  const surface = resolveThemeHex(config, 'colorSurface', '#ffffff');
+  const text = resolveThemeHex(config, 'colorText', '#1f2937');
+  const muted = resolveThemeHex(config, 'colorTextMuted', '#6b7280');
+  const dark = isDarkHex(surface);
+  const lift = dark ? '#ffffff' : '#000000';
+  const controlBg = mixHex(surface, lift, dark ? 0.16 : 0.1);
+
+  const root = document.documentElement;
+  root.style.setProperty('--theme-text', text);
+  root.style.setProperty('--theme-muted', muted);
+  root.style.setProperty('--theme-line', mixHex(surface, lift, dark ? 0.12 : 0.1));
+  root.style.setProperty('--theme-hover', mixHex(surface, lift, dark ? 0.08 : 0.04));
+  root.style.setProperty('--theme-soft', mixHex(surface, lift, dark ? 0.06 : 0.03));
+  root.style.setProperty('--theme-track', mixHex(surface, lift, dark ? 0.18 : 0.1));
+  root.style.setProperty('--theme-control-bg', controlBg);
+  root.style.setProperty('--theme-control-text', isDarkHex(controlBg) ? '#ffffff' : '#111827');
+  root.style.setProperty('--theme-control-hover', mixHex(controlBg, lift, 0.1));
+  root.style.setProperty('--theme-field-bg', dark ? mixHex(surface, '#ffffff', 0.08) : '#ffffff');
+  root.style.setProperty('--theme-field-text', dark ? text : '#111827');
+  root.classList.toggle('theme-dark', dark);
+}
+
 function applyThemeValue(el, prefix, value) {
   const parsed = parseColorValue(value);
   if (!parsed) return;
@@ -98,6 +183,7 @@ function getBorderRadiusClasses(config) {
 }
 
 function applyTheme(config) {
+  applyDerivedTheme(config);
   document.querySelectorAll('[data-theme]').forEach(function (el) {
     const roles = el.getAttribute('data-theme').split(/\s+/);
     roles.forEach(function (role) {
