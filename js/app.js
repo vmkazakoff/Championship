@@ -6,7 +6,7 @@ const appState = {
   teamSubmissions: {},
   bootstrap: null,
   assignmentsPage: 0,
-  authRole: 'captain',
+  loginTab: 'captain',
 };
 
 const els = {
@@ -38,15 +38,15 @@ const els = {
   captainTab: document.getElementById('captainTab'),
   memberTab: document.getElementById('memberTab'),
   displayNameField: document.getElementById('displayNameField'),
-  teamNameInput: document.getElementById('teamNameInput'),
+  captainTeamFields: document.getElementById('captainTeamFields'),
   teamNameField: document.getElementById('teamNameField'),
-  roomField: document.getElementById('roomField'),
-  memberTeamInput: document.getElementById('memberTeamInput'),
+  hallField: document.getElementById('hallField'),
+  memberTeamFields: document.getElementById('memberTeamFields'),
   memberTeamSelect: document.getElementById('memberTeamSelect'),
   answerModal: document.getElementById('answerModal'),
   answerModalTitle: document.getElementById('answerModalTitle'),
   answerModalDescription: document.getElementById('answerModalDescription'),
-  answerPromptLabel: document.getElementById('answerPromptLabel'),
+  answerLabel: document.getElementById('answerLabel'),
   answerText: document.getElementById('answerText'),
   answerFile: document.getElementById('answerFile'),
   answerFileDrop: document.getElementById('answerFileDrop'),
@@ -155,10 +155,10 @@ function setupEventListeners() {
     goToAssignmentsPage(appState.assignmentsPage + 1);
   });
   els.captainTab.addEventListener('click', function () {
-    setAuthRole('captain');
+    setLoginTab('captain');
   });
   els.memberTab.addEventListener('click', function () {
-    setAuthRole('member');
+    setLoginTab('member');
   });
 
   els.assignmentsTrack.addEventListener('click', function (e) {
@@ -181,18 +181,22 @@ function setupEventListeners() {
 function restoreSession() {
   let role = localStorage.getItem('userRole');
   const teamName = localStorage.getItem('teamName');
-  if (role === 'observer' && teamName) {
-    role = 'member';
-    localStorage.setItem('userRole', 'member');
+  if (role === 'observer') {
+    if (teamName) {
+      role = 'member';
+      localStorage.setItem('userRole', role);
+    } else {
+      localStorage.removeItem('userRole');
+      role = null;
+    }
   }
-  if (role) {
+  if (role === 'captain' || role === 'member') {
     appState.userRole = role;
-    appState.teamName = role === 'observer' ? null : teamName;
-    if (role === 'observer') localStorage.removeItem('teamName');
+    appState.teamName = teamName;
     updateRoleUI();
-  } else {
-    showAuthModal();
+    return;
   }
+  showAuthModal();
 }
 
 async function loadData() {
@@ -344,10 +348,10 @@ function isTeamMemberRole() {
   return appState.userRole === 'member' && !!appState.teamName;
 }
 
-function renderAssignmentCard(a, completedCount) {
-  const title = assignmentCardTitle(a.description, a.id);
-  const submitted = appState.submittedAnswers.has(String(a.id));
-  const submission = getTeamSubmission(a.id);
+function renderAssignmentCard(assignment, completedCount) {
+  const title = assignmentCardTitle(assignment.description, assignment.id);
+  const submitted = appState.submittedAnswers.has(String(assignment.id));
+  const submission = getTeamSubmission(assignment.id);
   const isCaptain = isCaptainRole();
   const memberCanView = isTeamMemberRole() && submitted;
   const config = appState.bootstrap && appState.bootstrap.config;
@@ -370,7 +374,7 @@ function renderAssignmentCard(a, completedCount) {
   const bodyCore =
     '<div class="flex flex-col flex-grow text-center min-h-[120px]">' +
     '<div class="text-sm opacity-80 mb-1">Задание ' +
-    a.id +
+    assignment.id +
     '</div>' +
     '<div class="text-3xl font-bold leading-none mb-1">' +
     completedCount +
@@ -396,7 +400,7 @@ function renderAssignmentCard(a, completedCount) {
       (submitted ? ' assignment-btn--submitted opacity-60 hover:opacity-80' : '') +
       ' cursor-pointer' +
       '" data-assignment="' +
-      a.id +
+      assignment.id +
       '">' +
       '<div data-theme="assignment-bg" class="' +
       radius.top +
@@ -421,7 +425,7 @@ function renderAssignmentCard(a, completedCount) {
       radius.all +
       ' assignment-btn--active cursor-pointer' +
       '" data-assignment="' +
-      a.id +
+      assignment.id +
       '">' +
       '<div data-theme="assignment-bg" class="' +
       radius.top +
@@ -442,7 +446,7 @@ function renderAssignmentCard(a, completedCount) {
     ' ' +
     radius.all +
     '" data-assignment-id="' +
-    a.id +
+    assignment.id +
     '">' +
     '<div data-theme="assignment-bg" class="text-center flex-grow flex flex-col text-white p-4 sm:p-5 min-h-[160px]">' +
     body +
@@ -821,8 +825,8 @@ function parseStoredAnswer(value) {
     };
   }
   const trimmed = raw.trim();
-  const legacyFile = /^https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?)/i.test(trimmed) && trimmed.indexOf('\n') === -1 && trimmed.indexOf(' ') === -1;
-  if (legacyFile) return { fileName: 'Файл', fileUrl: trimmed, text: '' };
+  const driveFileOnly = /^https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?)/i.test(trimmed) && trimmed.indexOf(' ') === -1;
+  if (driveFileOnly) return { fileName: 'Файл', fileUrl: trimmed, text: '' };
   return { fileName: '', fileUrl: '', text: raw };
 }
 
@@ -911,9 +915,7 @@ function populateAnswerModal(assignment, options) {
 
   els.answerModalTitle.textContent = 'Задание ' + id;
   els.answerModalDescription.textContent = assignment.description;
-  if (els.answerPromptLabel) {
-    els.answerPromptLabel.textContent = captain ? 'Ваш ответ:' : 'Ответ команды:';
-  }
+  els.answerLabel.textContent = captain ? 'Ваш ответ:' : 'Ответ команды:';
 
   if (captain) {
     els.submitAnswerButton.classList.remove('hidden');
@@ -997,8 +999,6 @@ function getKnownTeamNames() {
 }
 
 function syncMemberTeamSelect() {
-  if (!els.memberTeamSelect) return;
-
   const names = getKnownTeamNames();
   const namesKey = names.join('\0');
   const previous = els.memberTeamSelect.value;
@@ -1020,25 +1020,20 @@ function syncMemberTeamSelect() {
     }
   }
 
-  updateMemberTeamSelectVisibility();
+  updateLoginFields();
 }
 
-function updateMemberTeamSelectVisibility() {
-  if (!els.memberTeamInput) return;
-  if (appState.authRole === 'member') {
-    els.memberTeamInput.classList.remove('hidden');
-    els.teamNameInput.classList.add('hidden');
-  } else {
-    els.memberTeamInput.classList.add('hidden');
-    els.teamNameInput.classList.remove('hidden');
-  }
+function updateLoginFields() {
+  const member = appState.loginTab === 'member';
+  els.memberTeamFields.classList.toggle('hidden', !member);
+  els.captainTeamFields.classList.toggle('hidden', member);
 }
 
-function setAuthRole(role) {
-  appState.authRole = role === 'member' ? 'member' : 'captain';
-  els.captainTab.classList.toggle('role-tab--active', appState.authRole === 'captain');
-  els.memberTab.classList.toggle('role-tab--active', appState.authRole === 'member');
-  updateMemberTeamSelectVisibility();
+function setLoginTab(role) {
+  appState.loginTab = role === 'member' ? 'member' : 'captain';
+  els.captainTab.classList.toggle('role-tab--active', appState.loginTab === 'captain');
+  els.memberTab.classList.toggle('role-tab--active', appState.loginTab === 'member');
+  updateLoginFields();
 }
 
 function getPersonId() {
@@ -1064,7 +1059,7 @@ function showAuthModal() {
   if (savedName && !els.displayNameField.value.trim()) {
     els.displayNameField.value = savedName;
   }
-  setAuthRole(appState.authRole || 'captain');
+  setLoginTab(appState.loginTab || 'captain');
   syncMemberTeamSelect();
 }
 
@@ -1073,9 +1068,9 @@ function hideAuthModal() {
   document.body.style.overflow = 'auto';
 }
 
-function composeTeamName(name, room) {
+function composeTeamName(name, hall) {
   const team = String(name || '').trim();
-  const place = String(room || '').trim();
+  const place = String(hall || '').trim();
   if (!team) return '';
   if (!place) return team;
   return team + ' (зал ' + place + ')';
@@ -1089,7 +1084,7 @@ function splitTeamName(fullName) {
 }
 
 async function handleLogin() {
-  const role = appState.authRole === 'member' ? 'member' : 'captain';
+  const role = appState.loginTab === 'member' ? 'member' : 'captain';
   const displayName = els.displayNameField.value.trim();
   let teamName = null;
 
@@ -1102,7 +1097,7 @@ async function handleLogin() {
   els.loginButton.textContent = 'Вход…';
 
   if (role === 'captain') {
-    teamName = composeTeamName(els.teamNameField.value, els.roomField ? els.roomField.value : '');
+    teamName = composeTeamName(els.teamNameField.value, els.hallField.value);
     if (!teamName) {
       alert('Пожалуйста, введите название команды');
       resetLoginButton();
@@ -1122,7 +1117,7 @@ async function handleLogin() {
       return;
     }
   } else {
-    teamName = els.memberTeamSelect ? els.memberTeamSelect.value.trim() : '';
+    teamName = els.memberTeamSelect.value.trim();
     if (!teamName) {
       alert(getKnownTeamNames().length ? 'Пожалуйста, выберите команду' : 'Пока нет зарегистрированных команд');
       resetLoginButton();
@@ -1139,7 +1134,7 @@ async function handleLogin() {
       personId: getPersonId(),
     });
     if (!joined.success) {
-      alert('Не удалось записать участника. Обновите скрипт таблицы: нужно действие join.');
+      alert('Не удалось записать участника');
       resetLoginButton();
       return;
     }
@@ -1338,20 +1333,6 @@ function showLinksModal() {
 function hideLinksModal() {
   els.linksModal.classList.add('hidden');
   document.body.style.overflow = 'auto';
-}
-
-function showNotification(message) {
-  const el = document.createElement('div');
-  el.className =
-    'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 bg-green-500 text-white transition-all duration-300';
-  el.textContent = message;
-  document.body.appendChild(el);
-  setTimeout(function () {
-    el.style.opacity = '0';
-    setTimeout(function () {
-      document.body.removeChild(el);
-    }, 300);
-  }, 3000);
 }
 
 function escapeHtml(str) {

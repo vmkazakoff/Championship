@@ -84,11 +84,3 @@ function buildLinksModalContent(container, config) {
   container.appendChild(grid);
   applyTheme(config);
 }
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}

@@ -5,7 +5,6 @@ const THEME_ROLES = {
   'card-bg': { key: 'colorSurface', prefix: 'bg' },
   'muted-text': { key: 'colorTextMuted', prefix: 'text' },
   'primary-bg': { key: 'colorPrimary', prefix: 'bg' },
-  'primary-dark-bg': { key: 'colorPrimaryDark', prefix: 'bg' },
   'accent-bg': { key: 'colorAccent', prefix: 'bg' },
   'accent-text': { key: 'colorAccent', prefix: 'text' },
   'assignment-bg': { key: 'colorPrimary', prefix: 'bg' },
@@ -15,7 +14,6 @@ const THEME_ROLES = {
 const STYLE_PROPS = {
   bg: 'backgroundColor',
   text: 'color',
-  border: 'borderColor',
 };
 
 const TAILWIND_PALETTE = {

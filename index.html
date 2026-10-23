@@ -7,7 +7,7 @@
   <link id="favicon" rel="icon" href="">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style type="text/tailwindcss">
-    @source inline("bg-gray-50 bg-white bg-gray-200 bg-gray-300 bg-gray-500 bg-gray-700 bg-gray-800 bg-blue-800 bg-green-500 bg-red-500 bg-yellow-50 text-gray-50 text-white text-gray-300 text-gray-500 text-gray-600 text-gray-800 text-blue-800 text-green-500 text-red-500 text-yellow-600 text-yellow-800 border-gray-200 border-gray-300 border-yellow-200 rounded-sm rounded rounded-md rounded-lg rounded-xl rounded-2xl rounded-full rounded-t-sm rounded-t rounded-t-md rounded-t-lg rounded-t-xl rounded-t-2xl rounded-b-sm rounded-b rounded-b-md rounded-b-lg rounded-b-xl rounded-b-2xl from-blue-800 to-blue-800 hover:from-blue-800 hover:to-blue-800 hover:bg-gray-700 group-hover:bg-gray-700 bg-[#0066CC] text-[#0066CC] bg-[#FF6600] text-[#FF6600] group-hover:text-[var(--qr-accent)] opacity-60 hover:opacity-80 line-clamp-2 line-clamp-3 space-y-3");
+    @source inline("bg-gray-50 bg-white bg-gray-200 bg-gray-300 bg-gray-500 bg-gray-700 bg-gray-800 bg-blue-800 bg-green-500 bg-red-500 bg-yellow-50 text-gray-50 text-white text-gray-300 text-gray-500 text-gray-600 text-gray-800 text-blue-800 text-green-500 text-red-500 text-yellow-600 text-yellow-800 border-gray-200 border-gray-300 border-yellow-200 rounded-sm rounded rounded-md rounded-lg rounded-xl rounded-2xl rounded-full rounded-t-sm rounded-t rounded-t-md rounded-t-lg rounded-t-xl rounded-t-2xl rounded-b-sm rounded-b rounded-b-md rounded-b-lg rounded-b-xl rounded-b-2xl hover:bg-gray-700 group-hover:bg-gray-700 group-hover:text-[var(--qr-accent)] opacity-60 hover:opacity-80 space-y-3");
   </style>
   <style>
     @keyframes spin-slow {
@@ -305,13 +305,13 @@
           <label class="block text-sm font-medium mb-2" for="displayNameField">Как к вам обращаться</label>
           <input type="text" id="displayNameField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Имя и фамилия">
         </div>
-        <div id="teamNameInput" class="mb-6">
+        <div id="captainTeamFields" class="mb-6">
           <label class="block text-sm font-medium mb-2">Название команды:</label>
           <input type="text" id="teamNameField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите название команды">
-          <label class="block text-sm font-medium mt-4 mb-2">Номер комнаты в ВКС:</label>
-          <input type="text" id="roomField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Например, 12">
+          <label class="block text-sm font-medium mt-4 mb-2" for="hallField">Номер зала:</label>
+          <input type="text" id="hallField" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Например, 12">
         </div>
-        <div id="memberTeamInput" class="mb-6 hidden">
+        <div id="memberTeamFields" class="mb-6 hidden">
           <label class="block text-sm font-medium mb-2">Ваша команда:</label>
           <select id="memberTeamSelect" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="" disabled selected>Выберите команду</option>
@@ -332,7 +332,7 @@
         <h3 id="answerModalTitle" class="text-xl font-bold mb-2">Задание</h3>
         <p id="answerModalDescription" class="text-sm mb-4 whitespace-pre-wrap" data-theme="muted-text"></p>
         <div class="mb-4">
-          <label id="answerPromptLabel" class="block text-sm font-medium mb-2">Ваш ответ:</label>
+          <label id="answerLabel" class="block text-sm font-medium mb-2">Ваш ответ:</label>
           <textarea id="answerText" rows="8" class="theme-field w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Введите ваш ответ…"></textarea>
           <input id="answerFile" type="file" class="hidden" tabindex="-1">
           <div id="answerFileDrop" class="answer-file-drop mt-3" tabindex="0" role="button" aria-label="Прикрепить файл">
