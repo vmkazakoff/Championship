@@ -116,6 +116,26 @@
       background: var(--theme-primary, #0066cc);
       color: #fff;
     }
+    .team-pill,
+    .hall-pill {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 0.15rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .team-pill {
+      background: var(--theme-soft, #f3f4f6);
+      color: var(--theme-text, #1f2937);
+      border: 1px solid var(--theme-line, #e5e7eb);
+    }
+    .hall-pill {
+      background: var(--theme-primary, #0066cc);
+      color: #fff;
+    }
     .theme-modal {
       box-shadow: var(--theme-modal-shadow, 0 24px 60px rgba(15, 23, 42, .28), 0 8px 24px rgba(15, 23, 42, .18));
     }
@@ -157,9 +177,9 @@
 
     <!-- Заголовок дашборда -->
     <div class="flex items-center justify-between mb-4 gap-4">
-      <h2 class="text-xl sm:text-2xl font-bold">
-        Общий дашборд
-        <span id="teamNameLabel" class="text-base font-normal hidden" data-theme="muted-text"></span>
+      <h2 class="text-xl sm:text-2xl font-bold flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span>Общий дашборд</span>
+        <span id="teamNameLabel" class="hidden inline-flex items-center gap-2 font-normal"></span>
       </h2>
       <button id="refreshButton" type="button" class="theme-icon-btn p-3 rounded-full transition-colors shrink-0" title="Обновить">
         <svg id="refreshIcon" class="w-6 h-6" data-theme="accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">

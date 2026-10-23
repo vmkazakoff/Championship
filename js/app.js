@@ -794,10 +794,18 @@ function populateAnswerModal(assignment, options) {
 
 function updateRoleUI() {
   if ((isCaptainRole() || isTeamMemberRole()) && appState.teamName) {
-    els.teamNameLabel.textContent = '(команда: ' + appState.teamName + ')';
+    const parts = splitTeamName(appState.teamName);
+    let html = '<span class="team-pill">' + escapeHtml(parts.name) + '</span>';
+    if (parts.hall) {
+      html += '<span class="hall-pill">зал ' + escapeHtml(parts.hall) + '</span>';
+    }
+    els.teamNameLabel.innerHTML = html;
     els.teamNameLabel.classList.remove('hidden');
+    els.teamNameLabel.classList.add('inline-flex');
   } else {
+    els.teamNameLabel.innerHTML = '';
     els.teamNameLabel.classList.add('hidden');
+    els.teamNameLabel.classList.remove('inline-flex');
   }
 
   if (appState.bootstrap) {
@@ -905,7 +913,14 @@ function composeTeamName(name, room) {
   const place = String(room || '').trim();
   if (!team) return '';
   if (!place) return team;
-  return team + ' (комната ' + place + ')';
+  return team + ' (зал ' + place + ')';
+}
+
+function splitTeamName(fullName) {
+  const text = String(fullName || '').trim();
+  const match = text.match(/^(.*)\s+\((?:комната|зал)\s+([^)]+)\)$/i);
+  if (!match) return { name: text, hall: '' };
+  return { name: match[1].trim(), hall: match[2].trim() };
 }
 
 async function handleLogin() {
