@@ -36,6 +36,7 @@ const els = {
   cancelButton: document.getElementById('cancelButton'),
   teamNameInput: document.getElementById('teamNameInput'),
   teamNameField: document.getElementById('teamNameField'),
+  roomField: document.getElementById('roomField'),
   memberTeamInput: document.getElementById('memberTeamInput'),
   memberTeamSelect: document.getElementById('memberTeamSelect'),
   answerModal: document.getElementById('answerModal'),
@@ -879,6 +880,14 @@ function handleRoleChange(e) {
   }
 }
 
+function composeTeamName(name, room) {
+  const team = String(name || '').trim();
+  const place = String(room || '').trim();
+  if (!team) return '';
+  if (!place) return team;
+  return team + ' (комната ' + place + ')';
+}
+
 async function handleLogin() {
   const selected = document.querySelector('input[name="role"]:checked');
   if (!selected) {
@@ -893,7 +902,7 @@ async function handleLogin() {
   els.loginButton.textContent = 'Вход…';
 
   if (role === 'captain') {
-    teamName = els.teamNameField.value.trim();
+    teamName = composeTeamName(els.teamNameField.value, els.roomField ? els.roomField.value : '');
     if (!teamName) {
       alert('Пожалуйста, введите название команды');
       els.loginButton.disabled = false;
